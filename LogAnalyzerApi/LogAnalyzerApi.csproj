@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+      <UserSecretsId>0f6c70d9-7e3d-484a-adb9-28d3647bb725</UserSecretsId>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LogAnalyzerBusiness\LogAnalyzerBusiness.csproj" />
+    </ItemGroup>
+
+</Project>
