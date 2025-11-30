@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  loganalyzer:
+    build: .
+    ports:
+      - "5045:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Gpt__ApiKey=${GPT_API_KEY}
+    restart: unless-stopped
