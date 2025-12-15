@@ -11,8 +11,6 @@ namespace LogAnalyzerBusiness.Worker;
 
 public class LogProcessorWorker(IResultStore resultStore, Channel<(Guid,string)> channel, IParsingService parsingService, IGptService gptService, IRateLimitService rateLimitService) : BackgroundService
 {
-    
-
     private async Task ProcessTasksAsync(int workerId, CancellationToken stoppingToken)
     {
         Console.WriteLine($"Worker {workerId} started");

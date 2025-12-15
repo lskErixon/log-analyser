@@ -5,6 +5,7 @@ using LogAnalyzerData.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LogAnalyzerApi.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class LogController(IResultStore resultStore, Channel<(Guid,string)> channel) : ControllerBase
@@ -34,11 +35,4 @@ public class LogController(IResultStore resultStore, Channel<(Guid,string)> chan
         }
         return Ok(result);
     }
-
-    // [HttpGet("task/{taskId}")]
-    // public IActionResult GetTaskStatus(Guid taskId)
-    // {
-    //     
-    // }
-    
 }
