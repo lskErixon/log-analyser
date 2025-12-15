@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Log Analyzer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #result {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            line-height: 1.6;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Log Analyzer</h2>
+
+    <textarea id="logs" placeholder="Paste your logs here..."></textarea>
+
+    <button onclick="analyze()" id="btn">Analyze</button>
+    <div id="status"></div>
+
+    <div id="result-container" style="display: none;">
+        <div class="stats">
+            <span id="stat-total"></span>
+            <span id="stat-errors" style="color: red;"></span>
+            <span id="stat-warnings" style="color: orange;"></span>
+        </div>
+        <div id="result"></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:5045/api/log';
+
+    async function analyze() {
+        const logs = document.getElementById('logs').value;
+        const btn = document.getElementById('btn');
+        const status = document.getElementById('status');
+        const resultContainer = document.getElementById('result-container');
+        const resultDiv = document.getElementById('result');
+
+        if (!logs.trim()) return;
+
+        btn.disabled = true;
+        status.innerText = 'Sending data...';
+        resultContainer.style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_URL}/add-task`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logs })
+            });
+
+            if (!response.ok) throw new Error('Server error');
+
+            let taskId = await response.text();
+            taskId = taskId.replace(/"/g, '');
+
+            status.innerText = 'Processing...';
+
+            const interval = setInterval(async () => {
+                try {
+                    const pollRes = await fetch(`${API_URL}/result/${taskId}`);
+                    const data = await pollRes.json();
+
+                    if (data.status === 'Completed') {
+                        clearInterval(interval);
+                        status.innerText = '';
+                        btn.disabled = false;
+
+                        document.getElementById('stat-total').innerText = 'Total: ' + data.metrics.totalEntries;
+                        document.getElementById('stat-errors').innerText = 'Errors: ' + data.metrics.errors;
+                        document.getElementById('stat-warnings').innerText = 'Warnings: ' + data.metrics.warnings;
+
+                        resultDiv.innerHTML = marked.parse(data.summary);
+                        resultContainer.style.display = 'block';
+                    }
+                    else if (data.status === 'Failed') {
+                        clearInterval(interval);
+                        status.innerText = 'Analysis failed';
+                        btn.disabled = false;
+                    }
+                } catch (e) {
+                    clearInterval(interval);
+                    status.innerText = 'Polling error';
+                    btn.disabled = false;
+                }
+            }, 1000);
+
+        } catch (e) {
+            status.innerText = 'Connection error';
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
